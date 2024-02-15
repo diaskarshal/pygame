@@ -55,17 +55,17 @@ class Laser:
     def draw(self, window):
         window.blit(self.img, (self.x, self.y))
 
-class Ship:
-    COOLDOWN = 30 #makes restriction of 2 bullets/second
+class Zombie:
+    COOLDOWN = 30 #makes restriction of 2 bullets/second, prevents spamming
 
     def __init__(self, x, y, health=100):
         self.x = x
         self.y = y
         self.health = health
-        self.ship_img = None
+        self.zombie_img = None
         self.laser_img = None
         self.lasers = []
-        self.cooldown_counter = 0
+        self.cooldown_counter = 0 
     
     def shoot(self):
         if self.cooldown_counter == 0:
@@ -95,16 +95,16 @@ class Ship:
             self.cooldown_counter += 1
 
     def draw(self, win):
-        win.blit(self.ship_img, (self.x, self.y))
+        win.blit(self.zombie_img, (self.x, self.y))
         for laser in self.lasers:
             laser.draw(win)
 
-class Player(Ship):
+class Player(Zombie):
     def __init__(self, x, y, health=100):
         super().__init__(x, y, health)
-        self.ship_img = PLAYER_ALIHAN
+        self.zombie_img = PLAYER_ALIHAN
         self.laser_img = YELLOW_LASER
-        self.mask = pygame.mask.from_surface(self.ship_img)
+        self.mask = pygame.mask.from_surface(self.zombie_img)
         self.max_health = health
 
     def move_lasers(self, vel, objs):
@@ -121,14 +121,14 @@ class Player(Ship):
                             self.lasers.remove(laser)
 
     def healthbar(self, window):
-        pygame.draw.rect(window, (255,0,0), (self.x, self.y + ENEMY_SIZE + 10, self.ship_img.get_width(), 10))#red(damage) is placed under the green(health) bar
-        pygame.draw.rect(window, (0,255,0), (self.x, self.y + ENEMY_SIZE + 10, self.ship_img.get_width() * (self.health/self.max_health), 10))#fills the green bar with the percentage of health: 78hp -> 78% green, 22% red bar
+        pygame.draw.rect(window, (255,0,0), (self.x, self.y + ENEMY_SIZE + 10, self.zombie_img.get_width(), 10))#red(damage) is placed under the green(health) bar
+        pygame.draw.rect(window, (0,255,0), (self.x, self.y + ENEMY_SIZE + 10, self.zombie_img.get_width() * (self.health/self.max_health), 10))#fills the green bar with the percentage of health: 78hp -> 78% green, 22% red bar
 
     def draw(self, window):
         super().draw(window)
         self.healthbar(window)
 
-class Enemy(Ship):
+class Enemy(Zombie):
     ENEMIES_MAP = {
                 "ALPA": (ENEMY_ALPA, RED_LASER_ALPA),
                 "MURA": (ENEMY_MURA, GREEN_LASER_MURA),
@@ -136,8 +136,8 @@ class Enemy(Ship):
 
     def __init__(self, x, y, enemy, health=100):
         super().__init__(x, y, health)
-        self.ship_img, self.laser_img = self.ENEMIES_MAP[enemy]
-        self.mask = pygame.mask.from_surface(self.ship_img)
+        self.zombie_img, self.laser_img = self.ENEMIES_MAP[enemy]
+        self.mask = pygame.mask.from_surface(self.zombie_img)
 
     def move(self, vel):
         self.y += vel
@@ -148,20 +148,19 @@ class Enemy(Ship):
             self.lasers.append(laser)
             self.cooldown_counter = 1
 
-class Fruit(Ship):
+class Fruit(Zombie):
     def __init__(self, x, y):
         super().__init__(x, y)
-        self.ship_img = ORANGE
-        self.mask = pygame.mask.from_surface(self.ship_img)
+        self.zombie_img = ORANGE
+        self.mask = pygame.mask.from_surface(self.zombie_img)
         self.fruit = None
     
     def move(self, vel):
         self.y += vel
     
-
 def collide(obj1, obj2):
-    offset_x = obj2.x - obj1.x
-    offset_y = obj2.y - obj1.y
+    offset_x = obj2.x - obj1.x #distance between 2 objs
+    offset_y = obj2.y - obj1.y  
     return obj1.mask.overlap(obj2.mask, (offset_x, offset_y)) != None
     
 def main():
@@ -221,7 +220,7 @@ def main():
             enemy.move(enemy_vel)
             enemy.move_lasers(laser_vel, player)
             
-            if random.randrange(0, 100) == 1:
+            if random.randrange(0, 100) == 1: #probabilityy of shooting 50% in 100f/s
                 enemy.shoot()
 
             if collide(enemy, player):
@@ -233,6 +232,7 @@ def main():
                 lives -= 1
                 LOSE_LIFE_SOUND.play(0)
                 enemies.remove(enemy)
+
             if collide(fruit, player):
                 player.health = 100
                 EAT_SOUND.play(0)
@@ -257,7 +257,7 @@ def main():
             lost_count += 1 
 
         if lost: #makes the 4s pause between lost menu and main menu
-            if lost_count > FPS * 4: 
+            if lost_count > 240: 
                 RUN = False
             else:
                 continue

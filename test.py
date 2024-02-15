@@ -6,7 +6,8 @@ WIDTH, HEIGHT = 900, 750
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("POLDNIKS WAR")
 font = pygame.font.SysFont("arial", 50)
-BG = pygame.transform.scale(pygame.image.load(os.path.join("assets", "amongus.jpg")), (WIDTH, HEIGHT))
+BG_MAIN = pygame.transform.scale(pygame.image.load(os.path.join("assets", "amongus.jpg")), (WIDTH, HEIGHT))
+BG_MENU = pygame.transform.scale(pygame.image.load(os.path.join("assets", "alpa.jpg")), (WIDTH, HEIGHT))
 
 #Medicine image
 ORANGE = pygame.transform.scale(pygame.image.load(os.path.join("assets", "orange.png")), (50,50))
@@ -54,17 +55,17 @@ class Laser:
     def draw(self, window):
         window.blit(self.img, (self.x, self.y))
 
-class Ship:
-    COOLDOWN = 30 #makes restriction of 2 bullets/second
+class Zombie:
+    COOLDOWN = 30 #makes restriction of 2 bullets/second, prevents spamming
 
     def __init__(self, x, y, health=100):
         self.x = x
         self.y = y
         self.health = health
-        self.ship_img = None
+        self.zombie_img = None
         self.laser_img = None
         self.lasers = []
-        self.cooldown_counter = 0
+        self.cooldown_counter = 0 
     
     def shoot(self):
         if self.cooldown_counter == 0:
@@ -94,16 +95,16 @@ class Ship:
             self.cooldown_counter += 1
 
     def draw(self, win):
-        win.blit(self.ship_img, (self.x, self.y))
+        win.blit(self.zombie_img, (self.x, self.y))
         for laser in self.lasers:
             laser.draw(win)
 
-class Player(Ship):
+class Player(Zombie):
     def __init__(self, x, y, health=100):
         super().__init__(x, y, health)
-        self.ship_img = PLAYER_ALIHAN
+        self.zombie_img = PLAYER_ALIHAN
         self.laser_img = YELLOW_LASER
-        self.mask = pygame.mask.from_surface(self.ship_img)
+        self.mask = pygame.mask.from_surface(self.zombie_img)
         self.max_health = health
 
     def move_lasers(self, vel, objs):
@@ -120,14 +121,14 @@ class Player(Ship):
                             self.lasers.remove(laser)
 
     def healthbar(self, window):
-        pygame.draw.rect(window, (255,0,0), (self.x, self.y + ENEMY_SIZE + 10, self.ship_img.get_width(), 10))#red(damage) is placed under the green(health) bar
-        pygame.draw.rect(window, (0,255,0), (self.x, self.y + ENEMY_SIZE + 10, self.ship_img.get_width() * (self.health/self.max_health), 10))#fills the green bar with the percentage of health: 78hp -> 78% green, 22% red bar
+        pygame.draw.rect(window, (255,0,0), (self.x, self.y + ENEMY_SIZE + 10, self.zombie_img.get_width(), 10))#red(damage) is placed under the green(health) bar
+        pygame.draw.rect(window, (0,255,0), (self.x, self.y + ENEMY_SIZE + 10, self.zombie_img.get_width() * (self.health/self.max_health), 10))#fills the green bar with the percentage of health: 78hp -> 78% green, 22% red bar
 
     def draw(self, window):
         super().draw(window)
         self.healthbar(window)
 
-class Enemy(Ship):
+class Enemy(Zombie):
     ENEMIES_MAP = {
                 "ALPA": (ENEMY_ALPA, RED_LASER_ALPA),
                 "MURA": (ENEMY_MURA, GREEN_LASER_MURA),
@@ -135,8 +136,8 @@ class Enemy(Ship):
 
     def __init__(self, x, y, enemy, health=100):
         super().__init__(x, y, health)
-        self.ship_img, self.laser_img = self.ENEMIES_MAP[enemy]
-        self.mask = pygame.mask.from_surface(self.ship_img)
+        self.zombie_img, self.laser_img = self.ENEMIES_MAP[enemy]
+        self.mask = pygame.mask.from_surface(self.zombie_img)
 
     def move(self, vel):
         self.y += vel
@@ -147,20 +148,19 @@ class Enemy(Ship):
             self.lasers.append(laser)
             self.cooldown_counter = 1
 
-class Fruit(Ship):
+class Fruit(Zombie):
     def __init__(self, x, y):
         super().__init__(x, y)
-        self.ship_img = ORANGE
-        self.mask = pygame.mask.from_surface(self.ship_img)
+        self.zombie_img = ORANGE
+        self.mask = pygame.mask.from_surface(self.zombie_img)
         self.fruit = None
     
     def move(self, vel):
         self.y += vel
     
-
 def collide(obj1, obj2):
-    offset_x = obj2.x - obj1.x
-    offset_y = obj2.y - obj1.y
+    offset_x = obj2.x - obj1.x #distance between 2 objs
+    offset_y = obj2.y - obj1.y  
     return obj1.mask.overlap(obj2.mask, (offset_x, offset_y)) != None
     
 def main():
@@ -171,6 +171,7 @@ def main():
     lives = 5
 
     enemies = [] #store enemies location
+    fruits = []
     wave_length = 5
     enemy_vel = 1
 
@@ -186,7 +187,7 @@ def main():
     lost_count = 0 #seconds between changing menus
 
     def redraw_window():
-        WIN.blit(BG, (0,0))
+        WIN.blit(BG_MAIN, (0,0))
 
         lives_label = font.render(f"Lives: {lives}", 1, (255,255,255))
         level_label = font.render(f"Level: {level}", 1, (255,255,255))
@@ -219,7 +220,7 @@ def main():
             enemy.move(enemy_vel)
             enemy.move_lasers(laser_vel, player)
             
-            if random.randrange(0, 100) == 1:
+            if random.randrange(0, 100) == 1: #probabilityy of shooting 50% in 100f/s
                 enemy.shoot()
 
             if collide(enemy, player):
@@ -232,6 +233,10 @@ def main():
                 LOSE_LIFE_SOUND.play(0)
                 enemies.remove(enemy)
 
+            if collide(fruit, player):
+                player.health = 100
+                EAT_SOUND.play(0)
+
         player.move_lasers(-laser_vel, enemies) #-laser_vel because player shoots in opposite direction 
         fruit.move(5)
 
@@ -242,9 +247,20 @@ def main():
                 enemy = Enemy(random.randrange(0, 800), random.randrange(-1200, -100), random.choice(["ALPA", "MURA", "CHINA"])) #spawn enemies out of window's height for a random time delay between them
                 enemies.append(enemy)
             fruit = Fruit(random.randrange(0, 800), random.randrange(-1200, -100))
+            fruits.append(fruit)
 
         keys = pygame.key.get_pressed()
         mouse_buttons = pygame.mouse.get_pressed()
+
+        if lives <= 0 or player.health <= 0:
+            lost = True
+            lost_count += 1 
+
+        if lost: #makes the 4s pause between lost menu and main menu
+            if lost_count > 240: 
+                RUN = False
+            else:
+                continue
 
         #player movement
         if keys[pygame.K_a] and player.x - player_vel > 0: 
@@ -257,27 +273,13 @@ def main():
             player.y += player_vel
         if keys[pygame.K_SPACE] or mouse_buttons[0]:
             player.shoot()
-
-        if lives <= 0 or player.health <= 0:
-            lost = True
-            lost_count += 1 
-
-        if lost: #makes the 4s pause between lost menu and main menu
-            if lost_count > FPS * 4: 
-                RUN = False
-            else:
-                continue
-
-        if collide(fruit, player):
-            player.health = 100
-            EAT_SOUND.play(0)
-            
+    
 def menu():
     RUN = True
     MENU_MUSIC.play(-1)
     
     while RUN:
-        WIN.blit(BG, (0,0))
+        WIN.blit(BG_MENU, (0,0))
         title_label = font.render("PRESS MOUSE TO BEGIN", 1, (255,255,255))
         WIN.blit(title_label, (WIDTH/2 - title_label.get_width()/2, 375))#centre of the window
         
