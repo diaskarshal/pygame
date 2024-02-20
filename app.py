@@ -7,26 +7,26 @@ WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("POLDNIKS WAR")
 font = pygame.font.SysFont("arial", 50)
 BG_MAIN = pygame.transform.scale(pygame.image.load(os.path.join("assets", "amongus.jpg")), (WIDTH, HEIGHT))
-BG_MENU = pygame.transform.scale(pygame.image.load(os.path.join("assets", "alpa.jpg")), (WIDTH, HEIGHT))
+BG_MENU = pygame.transform.scale(pygame.image.load(os.path.join("assets", "alpa.png")), (WIDTH, HEIGHT))
 
 #Medicine image
 ORANGE = pygame.transform.scale(pygame.image.load(os.path.join("assets", "orange.png")), (50,50))
 
 #Load enemy settings
-ENEMY_SIZE = 70
+ENEMY_SIZE = 80
 
-ENEMY_ALPA = pygame.transform.scale(pygame.image.load(os.path.join("assets", "alpa.jpg")), (ENEMY_SIZE, ENEMY_SIZE))
-ENEMY_MURA = pygame.transform.scale(pygame.image.load(os.path.join("assets", "mura.jpg")), (ENEMY_SIZE, ENEMY_SIZE))
-ENEMY_CHINA = pygame.transform.scale(pygame.image.load(os.path.join("assets", "china.jpg")), (ENEMY_SIZE, ENEMY_SIZE))
+ENEMY_ALPA = pygame.transform.scale(pygame.image.load(os.path.join("assets", "alpa.png")), (ENEMY_SIZE, ENEMY_SIZE))
+ENEMY_MURA = pygame.transform.scale(pygame.image.load(os.path.join("assets", "mura.png")), (ENEMY_SIZE, ENEMY_SIZE))
+ENEMY_CHINA = pygame.transform.scale(pygame.image.load(os.path.join("assets", "china.png")), (ENEMY_SIZE, ENEMY_SIZE))
 
 RED_LASER_ALPA = pygame.image.load(os.path.join("assets", "pixel_laser_red.png"))
 GREEN_LASER_MURA = pygame.image.load(os.path.join("assets", "pixel_laser_green.png"))
 BLUE_LASER_CHINA = pygame.image.load(os.path.join("assets", "pixel_laser_blue.png"))
 
 #Load player settings
-PLAYER_SIZE = 80
+PLAYER_SIZE = 100
 
-PLAYER_ALIHAN = pygame.transform.scale(pygame.image.load(os.path.join("assets", "alihan.jpg")), (PLAYER_SIZE, PLAYER_SIZE))
+PLAYER_ALIHAN = pygame.transform.scale(pygame.image.load(os.path.join("assets", "alihan.png")), (PLAYER_SIZE, PLAYER_SIZE))
 YELLOW_LASER = pygame.image.load(os.path.join("assets", "pixel_laser_yellow.png"))
 
 #load sound effects and music
@@ -144,7 +144,7 @@ class Enemy(Zombie):
 
     def shoot(self):
         if self.cooldown_counter == 0:
-            laser = Laser(self.x-20, self.y, self.laser_img)
+            laser = Laser(self.x-10, self.y, self.laser_img)
             self.lasers.append(laser)
             self.cooldown_counter = 1
 
@@ -163,6 +163,14 @@ def collide(obj1, obj2):
     offset_y = obj2.y - obj1.y  
     return obj1.mask.overlap(obj2.mask, (offset_x, offset_y)) != None
     
+def pause():
+    MAIN_MUSIC.stop()
+    WIN.blit(BG_MENU, (0,0))
+    title_label = font.render("PRESS RIGHT MOUSE BUTTON TO RESUME", 1, (255,255,255))
+    WIN.blit(title_label, (WIDTH/2 - title_label.get_width()/2, 375))#centre of the window
+    
+    pygame.display.update()
+
 def main():
     MAIN_MUSIC.play(-1)
     RUN = True
@@ -249,9 +257,6 @@ def main():
             fruit = Fruit(random.randrange(0, 800), random.randrange(-1200, -100))
             fruits.append(fruit)
 
-        keys = pygame.key.get_pressed()
-        mouse_buttons = pygame.mouse.get_pressed()
-
         if lives <= 0 or player.health <= 0:
             lost = True
             lost_count += 1 
@@ -261,7 +266,8 @@ def main():
                 RUN = False
             else:
                 continue
-
+        keys = pygame.key.get_pressed()
+        mouse_buttons = pygame.mouse.get_pressed()
         #player movement
         if keys[pygame.K_a] and player.x - player_vel > 0: 
             player.x -= player_vel
@@ -273,6 +279,9 @@ def main():
             player.y += player_vel
         if keys[pygame.K_SPACE] or mouse_buttons[0]:
             player.shoot()
+            
+        if mouse_buttons[2]:
+            pause()
     
 def menu():
     RUN = True
