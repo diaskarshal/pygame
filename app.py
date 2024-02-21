@@ -4,10 +4,11 @@ pygame.init()
 #Window settings
 WIDTH, HEIGHT = 900, 750
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("POLDNIKS WAR")
+pygame.display.set_caption("SAVE POLDNIKS")
 font = pygame.font.SysFont("arial", 50)
-BG_MAIN = pygame.transform.scale(pygame.image.load(os.path.join("assets", "amongus.jpg")), (WIDTH, HEIGHT))
-BG_MENU = pygame.transform.scale(pygame.image.load(os.path.join("assets", "alpa.png")), (WIDTH, HEIGHT))
+BG_MAIN = pygame.transform.scale(pygame.image.load(os.path.join("assets", "main.jpg")), (WIDTH, HEIGHT))
+BG_MENU = pygame.transform.scale(pygame.image.load(os.path.join("assets", "menu.jpg")), (WIDTH, HEIGHT))
+BG_PAUSE = pygame.transform.scale(pygame.image.load(os.path.join("assets", "pause.jpg")), (WIDTH, HEIGHT))
 
 #Medicine image
 ORANGE = pygame.transform.scale(pygame.image.load(os.path.join("assets", "orange.png")), (50,50))
@@ -159,15 +160,15 @@ class Fruit(Zombie):
         self.y += vel
     
 def collide(obj1, obj2):
-    offset_x = obj2.x - obj1.x #distance between 2 objs
-    offset_y = obj2.y - obj1.y  
-    return obj1.mask.overlap(obj2.mask, (offset_x, offset_y)) != None
+    dx = obj2.x - obj1.x #distance between 2 objs
+    dy = obj2.y - obj1.y  
+    return obj1.mask.overlap(obj2.mask, (dx, dy)) != None
     
 def pause():
     MAIN_MUSIC.stop()
-    WIN.blit(BG_MENU, (0,0))
-    title_label = font.render("PRESS RIGHT MOUSE BUTTON TO RESUME", 1, (255,255,255))
-    WIN.blit(title_label, (WIDTH/2 - title_label.get_width()/2, 375))#centre of the window
+    WIN.blit(BG_PAUSE, (0,0))
+    pause_label = font.render("PRESS RIGHT MOUSE BUTTON TO RESUME", 1, (255,255,255))
+    WIN.blit(pause_label, (WIDTH/2 - pause_label.get_width()/2, 375))#centre of the window
     
     pygame.display.update()
 
@@ -197,7 +198,7 @@ def main():
     def redraw_window():
         WIN.blit(BG_MAIN, (0,0))
 
-        lives_label = font.render(f"Lives: {lives}", 1, (255,255,255))
+        lives_label = font.render(f"Poldniks: {lives}", 1, (255,255,255))
         level_label = font.render(f"Level: {level}", 1, (255,255,255))
 
         WIN.blit(lives_label, (10, 10))#top left
@@ -228,7 +229,7 @@ def main():
             enemy.move(enemy_vel)
             enemy.move_lasers(laser_vel, player)
             
-            if random.randrange(0, 100) == 1: #probabilityy of shooting 50% in 100f/s
+            if random.randrange(0, 100) == 1: #probabilityy of shooting 50% in 100frames/second
                 enemy.shoot()
 
             if collide(enemy, player):
