@@ -5,10 +5,9 @@ pygame.init()
 WIDTH, HEIGHT = 900, 750
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("SAVE POLDNIKS")
-font = pygame.font.SysFont("arial", 50)
+font = pygame.font.SysFont("terminal", 50)
 BG_MAIN = pygame.transform.scale(pygame.image.load(os.path.join("assets", "main.jpg")), (WIDTH, HEIGHT))
 BG_MENU = pygame.transform.scale(pygame.image.load(os.path.join("assets", "menu.jpg")), (WIDTH, HEIGHT))
-BG_PAUSE = pygame.transform.scale(pygame.image.load(os.path.join("assets", "pause.jpg")), (WIDTH, HEIGHT))
 
 #Medicine image
 ORANGE = pygame.transform.scale(pygame.image.load(os.path.join("assets", "orange.png")), (50,50))
@@ -26,7 +25,6 @@ BLUE_LASER_CHINA = pygame.image.load(os.path.join("assets", "pixel_laser_blue.pn
 
 #Load player settings
 PLAYER_SIZE = 100
-
 PLAYER_ALIHAN = pygame.transform.scale(pygame.image.load(os.path.join("assets", "alihan.png")), (PLAYER_SIZE, PLAYER_SIZE))
 YELLOW_LASER = pygame.image.load(os.path.join("assets", "pixel_laser_yellow.png"))
 
@@ -165,13 +163,20 @@ def collide(obj1, obj2):
     return obj1.mask.overlap(obj2.mask, (dx, dy)) != None
     
 def pause():
-    MAIN_MUSIC.stop()
-    WIN.blit(BG_PAUSE, (0,0))
-    pause_label = font.render("PRESS RIGHT MOUSE BUTTON TO RESUME", 1, (255,255,255))
-    WIN.blit(pause_label, (WIDTH/2 - pause_label.get_width()/2, 375))#centre of the window
-    
-    pygame.display.update()
+    paused = True
+    while paused:
 
+        pause_label = font.render("PRESS RIGHT MOUSE BUTTON TO RESUME", 1, (255,255,255))
+        WIN.blit(pause_label, (WIDTH/2 - pause_label.get_width()/2, 375))#centre of the window        
+        pygame.display.update()
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()    
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                paused = False  
+        
 def main():
     MAIN_MUSIC.play(-1)
     RUN = True
@@ -238,7 +243,10 @@ def main():
                 enemies.remove(enemy)
 
             if enemy.y + ENEMY_SIZE > HEIGHT:
-                lives -= 1
+                if lives <= 0:
+                    lives = 0
+                else:
+                    lives -= 1
                 LOSE_LIFE_SOUND.play(0)
                 enemies.remove(enemy)
 
@@ -246,7 +254,7 @@ def main():
                 player.health = 100
                 EAT_SOUND.play(0)
 
-        player.move_lasers(-laser_vel, enemies) #-laser_vel because player shoots in opposite direction 
+        player.move_lasers(-laser_vel, enemies) #player shoots in opposite direction 
         fruit.move(5)
 
         if len(enemies) == 0:
@@ -267,6 +275,7 @@ def main():
                 RUN = False
             else:
                 continue
+            
         keys = pygame.key.get_pressed()
         mouse_buttons = pygame.mouse.get_pressed()
         #player movement
@@ -276,7 +285,7 @@ def main():
             player.x += player_vel
         if keys[pygame.K_w] and player.y - player_vel > 0: 
             player.y -= player_vel
-        if keys[pygame.K_s] and player.y + player_vel + PLAYER_SIZE + 20 < HEIGHT: #+20px due to the healthbar's height 
+        if keys[pygame.K_s] and player.y + player_vel + PLAYER_SIZE + 20 < HEIGHT: #+20px is the healthbar's height 
             player.y += player_vel
         if keys[pygame.K_SPACE] or mouse_buttons[0]:
             player.shoot()
