@@ -166,7 +166,7 @@ def pause():
     paused = True
     while paused:
 
-        pause_label = font.render("PRESS RIGHT MOUSE BUTTON TO RESUME", 1, (255,255,255))
+        pause_label = font.render("PRESS MOUSE BUTTON TO RESUME", 1, (255,255,255))
         WIN.blit(pause_label, (WIDTH/2 - pause_label.get_width()/2, 375))#centre of the window        
         pygame.display.update()
         
@@ -311,5 +311,4 @@ def menu():
                 MENU_MUSIC.stop()
                 main()
     pygame.quit()
-
 menu()
